@@ -1,6 +1,8 @@
 package com.inventario.service;
 
 import com.inventario.model.Producto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -16,29 +18,31 @@ import java.util.List;
 @Service
 public class AlertaEmailService {
 
+    private static final Logger log = LoggerFactory.getLogger(AlertaEmailService.class);
+
     @Autowired
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String remitente;
 
-    // Lee la lista separada por comas del properties
     @Value("${app.alertas.destinatarios}")
     private String destinatariosRaw;
 
-    /** Convierte el string CSV en array de correos */
     private String[] getDestinatarios() {
         return destinatariosRaw.split(",");
     }
 
     @Async
     public void enviarAlertaStockBajo(Producto producto) {
+        log.info("[AlertaEmail] Intentando enviar alerta para producto: {} (stock={}, minimo={})",
+                producto.getNombre(), producto.getStockActual(), producto.getStockMinimo());
         try {
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
             helper.setFrom(remitente);
-            helper.setTo(getDestinatarios());   // ← envía a ambos correos
+            helper.setTo(getDestinatarios());
             helper.setSubject("⚠️ StockWise — Alerta de Stock Bajo: " + producto.getNombre());
 
             String fecha = LocalDateTime.now()
@@ -97,10 +101,10 @@ public class AlertaEmailService {
 
             helper.setText(html, true);
             mailSender.send(mensaje);
+            log.info("[AlertaEmail] ✅ Alerta enviada correctamente para: {}", producto.getNombre());
 
         } catch (Exception e) {
-            System.err.println("[AlertaEmail] Error enviando alerta para '"
-                + producto.getNombre() + "': " + e.getMessage());
+            log.error("[AlertaEmail] ❌ Error enviando alerta para '{}': {}", producto.getNombre(), e.getMessage(), e);
         }
     }
 
@@ -108,12 +112,13 @@ public class AlertaEmailService {
     public void enviarResumenStockBajo(List<Producto> productosEnAlerta) {
         if (productosEnAlerta.isEmpty()) return;
 
+        log.info("[AlertaEmail] Enviando resumen de {} productos con stock bajo", productosEnAlerta.size());
         try {
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
             helper.setFrom(remitente);
-            helper.setTo(getDestinatarios());   // ← envía a ambos correos
+            helper.setTo(getDestinatarios());
             helper.setSubject("📋 StockWise — Resumen de Alertas de Stock ("
                 + productosEnAlerta.size() + " productos)");
 
@@ -160,9 +165,10 @@ public class AlertaEmailService {
 
             helper.setText(html, true);
             mailSender.send(mensaje);
+            log.info("[AlertaEmail] ✅ Resumen enviado correctamente ({} productos)", productosEnAlerta.size());
 
         } catch (Exception e) {
-            System.err.println("[AlertaEmail] Error enviando resumen: " + e.getMessage());
+            log.error("[AlertaEmail] ❌ Error enviando resumen: {}", e.getMessage(), e);
         }
     }
 }
