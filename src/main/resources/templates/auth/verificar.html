@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>StockWise — Verificar correo</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        .ver-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 40px 16px;
+        }
+        .ver-box {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .ver-logo {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .ver-icon {
+            font-size: 52px;
+            margin: 24px 0 12px;
+        }
+        .ver-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .ver-desc {
+            font-size: 14px;
+            color: var(--text-2);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .ver-email {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        /* Inputs de código */
+        .code-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .code-digit {
+            width: 52px;
+            height: 60px;
+            background: var(--bg-3);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+            outline: none;
+            transition: border-color .2s;
+        }
+        .code-digit:focus { border-color: var(--accent); }
+        .code-digit.filled { border-color: var(--accent); background: rgba(0,255,180,.06); }
+
+        .btn-verificar {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity .2s;
+            margin-bottom: 16px;
+        }
+        .btn-verificar:hover { opacity: 0.85; }
+        .btn-verificar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .resend-row {
+            font-size: 13px;
+            color: var(--text-2);
+            margin-bottom: 16px;
+        }
+        .resend-row button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 0;
+            text-decoration: underline;
+        }
+        .resend-row button:hover { opacity: 0.8; }
+
+        .btn-back {
+            display: block;
+            color: var(--text-2);
+            font-size: 13px;
+            text-decoration: none;
+            transition: color .2s;
+        }
+        .btn-back:hover { color: var(--accent); }
+
+        .alert {
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .alert-danger  { background: #2d1a1a; border: 1px solid #7f2020; color: #ff6b6b; }
+        .alert-success { background: #1a2d24; border: 1px solid #207f50; color: #6bffb4; }
+
+        /* Countdown */
+        #countdown { font-weight: 700; color: var(--text); }
+    </style>
+</head>
+<body>
+<div class="ver-wrapper">
+    <div class="ver-box">
+        <div class="ver-logo">⬡ StockWise</div>
+
+        <div class="ver-icon">📧</div>
+        <div class="ver-title">Verifica tu correo</div>
+        <p class="ver-desc">
+            Enviamos un código de 6 dígitos a<br/>
+            <span class="ver-email" th:text="${email}"></span><br/>
+            Ingrésalo aquí para activar tu cuenta.
+        </p>
+
+        <!-- Mensajes -->
+        <div th:if="${errorMsg}" class="alert alert-danger" th:text="${errorMsg}"></div>
+        <div th:if="${param.reenviado}" class="alert alert-success">
+            ✓ Código reenviado. Revisa tu bandeja de entrada.
+        </div>
+
+        <!-- Formulario de verificación -->
+        <form th:action="@{/registro/verificar}" method="post" id="verForm">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" name="email" th:value="${email}"/>
+            <input type="hidden" name="codigo" id="codigoHidden"/>
+
+            <div class="code-inputs">
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d0"/>
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d1"/>
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d2"/>
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d3"/>
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d4"/>
+                <input class="code-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" id="d5"/>
+            </div>
+
+            <button type="submit" class="btn-verificar" id="btnVerificar" disabled>Verificar cuenta</button>
+        </form>
+
+        <!-- Reenviar -->
+        <div class="resend-row">
+            ¿No llegó el correo?
+            <form th:action="@{/registro/reenviar}" method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="email" th:value="${email}"/>
+                <button type="submit" id="btnReenviar" disabled>
+                    Reenviar código (<span id="countdown">60</span>s)
+                </button>
+            </form>
+        </div>
+
+        <a th:href="@{/registro}" class="btn-back">← Volver al registro</a>
+    </div>
+</div>
+
+<script>
+    // ── Inputs de dígitos ──────────────────────────────────────────────────
+    const digits     = Array.from(document.querySelectorAll('.code-digit'));
+    const hidden     = document.getElementById('codigoHidden');
+    const btnVerif   = document.getElementById('btnVerificar');
+
+    digits.forEach((input, i) => {
+        input.addEventListener('input', (e) => {
+            const val = e.target.value.replace(/\D/g, '');
+            e.target.value = val.slice(-1);
+            e.target.classList.toggle('filled', val.length > 0);
+            if (val && i < digits.length - 1) digits[i + 1].focus();
+            syncHidden();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && i > 0) {
+                digits[i - 1].focus();
+                digits[i - 1].value = '';
+                digits[i - 1].classList.remove('filled');
+                syncHidden();
+            }
+        });
+        // Paste handling
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            pasted.split('').slice(0, 6).forEach((ch, j) => {
+                if (digits[j]) { digits[j].value = ch; digits[j].classList.add('filled'); }
+            });
+            syncHidden();
+            const next = digits[Math.min(pasted.length, 5)];
+            if (next) next.focus();
+        });
+    });
+
+    function syncHidden() {
+        const code = digits.map(d => d.value).join('');
+        hidden.value = code;
+        btnVerif.disabled = code.length < 6;
+    }
+
+    // Auto-submit cuando los 6 dígitos están completos
+    document.getElementById('verForm').addEventListener('input', () => {
+        const code = digits.map(d => d.value).join('');
+        if (code.length === 6) {
+            setTimeout(() => document.getElementById('verForm').submit(), 300);
+        }
+    });
+
+    // ── Countdown para reenviar ────────────────────────────────────────────
+    let segundos = 60;
+    const countEl   = document.getElementById('countdown');
+    const btnReenv  = document.getElementById('btnReenviar');
+
+    const timer = setInterval(() => {
+        segundos--;
+        countEl.textContent = segundos;
+        if (segundos <= 0) {
+            clearInterval(timer);
+            btnReenv.disabled = false;
+            btnReenv.textContent = 'Reenviar código';
+        }
+    }, 1000);
+
+    // Focus al primer dígito
+    digits[0].focus();
+</script>
+</body>
+</html>

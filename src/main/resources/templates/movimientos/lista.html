@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Movimientos')}"></head>
+<body>
+<div class="layout">
+    <div th:replace="~{layout :: sidebar('movimientos')}"></div>
+    <main class="main-content">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <h1 class="page-title">
+                    Movimientos
+                    <span th:if="${hayFiltro}" class="filter-active-badge">Filtro activo</span>
+                </h1>
+                <p class="page-subtitle">Historial de entradas y salidas de inventario</p>
+            </div>
+            <!-- Solo ADMIN y MANEJADOR pueden registrar -->
+            <a sec:authorize="hasAnyRole('ADMIN','MANEJADOR')"
+               th:href="@{/movimientos/nuevo}"
+               class="btn-primary"
+               style="text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;">
+                + Nuevo Movimiento
+            </a>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}"   class="alert alert-danger"  th:text="${error}"></div>
+
+        <!-- ── Panel de filtros ───────────────────────────────────── -->
+        <form th:action="@{/movimientos}" method="get" class="filter-bar">
+
+            <div class="filter-group">
+                <label>Tipo</label>
+                <select name="tipo">
+                    <option value="">Todos los tipos</option>
+                    <option value="ENTRADA" th:selected="${filtroTipo == 'ENTRADA'}">↑ Entradas</option>
+                    <option value="SALIDA"  th:selected="${filtroTipo == 'SALIDA'}">↓ Salidas</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Motivo</label>
+                <select name="motivo">
+                    <option value="">Todos los motivos</option>
+                    <option value="COMPRA"     th:selected="${filtroMotivo == 'COMPRA'}">Compras</option>
+                    <option value="VENTA"      th:selected="${filtroMotivo == 'VENTA'}">Ventas</option>
+                    <option value="DEVOLUCION" th:selected="${filtroMotivo == 'DEVOLUCION'}">Devoluciones</option>
+                    <option value="MERMA"      th:selected="${filtroMotivo == 'MERMA'}">Mermas</option>
+                    <option value="AJUSTE"     th:selected="${filtroMotivo == 'AJUSTE'}">Ajustes</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Producto</label>
+                <select name="productoId">
+                    <option value="">Todos los productos</option>
+                    <option th:each="p : ${productos}"
+                            th:value="${p.id}"
+                            th:text="${p.nombre}"
+                            th:selected="${filtroProductoId == p.id}">—</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Proveedor</label>
+                <select name="proveedorId">
+                    <option value="">Todos los proveedores</option>
+                    <option th:each="pv : ${proveedores}"
+                            th:value="${pv.id}"
+                            th:text="${pv.nombre}"
+                            th:selected="${filtroProveedorId == pv.id}">—</option>
+                </select>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+                <button type="submit" class="btn-filter btn-filter-apply">🔍 Filtrar</button>
+                <a th:href="@{/movimientos}" class="btn-filter btn-filter-clear">✕ Limpiar</a>
+            </div>
+        </form>
+
+        <!-- ── Tabla de resultados ───────────────────────────────── -->
+        <div class="card table-container">
+
+            <!-- Resumen de resultados cuando hay filtro -->
+            <div th:if="${hayFiltro}" style="padding:10px 16px 0;font-size:13px;color:var(--text-2);">
+                Se encontraron <strong th:text="${#lists.size(movimientos)}" style="color:var(--text);">0</strong> movimiento(s) con los filtros aplicados.
+            </div>
+
+            <div th:if="${#lists.isEmpty(movimientos)}" style="color:var(--text-2);font-size:14px;padding:30px 0;text-align:center;">
+                No hay movimientos que coincidan con los filtros seleccionados.
+            </div>
+
+            <table th:unless="${#lists.isEmpty(movimientos)}">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                        <th>Tipo</th>
+                        <th>Motivo</th>
+                        <th>Cantidad</th>
+                        <th>Observación</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${movimientos}">
+                        <td th:text="${m.id}" style="color:var(--text-2);">1</td>
+                        <td style="font-weight:500;" th:text="${m.producto.nombre}">—</td>
+                        <td style="font-size:13px;color:var(--text-2);"
+                            th:text="${m.producto.proveedor != null ? m.producto.proveedor.nombre : '—'}">—</td>
+                        <td>
+                            <span th:if="${m.tipo.name() == 'ENTRADA'}" class="badge badge-success">↑ Entrada</span>
+                            <span th:if="${m.tipo.name() == 'SALIDA'}"  class="badge badge-danger">↓ Salida</span>
+                        </td>
+                        <td>
+                            <span th:switch="${m.motivo.name()}">
+                                <span th:case="'COMPRA'"     class="badge badge-info">Compra</span>
+                                <span th:case="'VENTA'"      class="badge badge-warning">Venta</span>
+                                <span th:case="'DEVOLUCION'" class="badge badge-success">Devolución</span>
+                                <span th:case="'MERMA'"      class="badge badge-danger">Merma</span>
+                                <span th:case="*"            class="badge" style="background:var(--bg-4);color:var(--text-2);" th:text="${m.motivo}">—</span>
+                            </span>
+                        </td>
+                        <td style="font-weight:600;" th:text="${m.cantidad}">0</td>
+                        <td style="color:var(--text-2);font-size:13px;" th:text="${m.observacion ?: '—'}">—</td>
+                        <td style="font-size:12px;color:var(--text-2);"
+                            th:text="${#temporals.format(m.createdAt,'dd/MM/yyyy HH:mm')}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

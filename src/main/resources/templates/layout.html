@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}"/>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title} + ' — StockWise'">StockWise</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 240px; min-width: 240px;
+            background: var(--bg-2);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 24px 0; position: fixed; top: 0; left: 0;
+            height: 100vh; overflow-y: auto;
+        }
+        .sidebar-logo {
+            font-family: var(--font-display);
+            font-size: 22px; font-weight: 800;
+            color: var(--accent);
+            padding: 0 24px 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .sidebar-logo span { font-size: 12px; font-weight: 400; color: var(--text-2); display: block; margin-top: 2px; }
+        .role-badge {
+            margin: 0 24px 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: .04em;
+        }
+        .role-admin    { background: rgba(0,229,195,0.12); color: var(--accent); border: 1px solid rgba(0,229,195,0.25); }
+        .role-manejador{ background: rgba(245,196,0,0.12); color: #f5c400; border: 1px solid rgba(245,196,0,0.25); }
+        .role-visor    { background: rgba(160,160,160,0.12); color: #aaa; border: 1px solid rgba(160,160,160,0.25); }
+        .nav-section { padding: 8px 24px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-2); opacity: 0.6; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 24px; color: var(--text-2);
+            text-decoration: none; font-size: 14px; font-weight: 500;
+            transition: all .15s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { color: var(--text); background: var(--bg-3); }
+        .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,229,195,0.06); }
+        .nav-icon { font-size: 16px; }
+        .sidebar-bottom {
+            margin-top: auto; padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+        .sidebar-user { font-size: 12px; color: var(--text-2); margin-bottom: 10px; }
+        .sidebar-user strong { color: var(--text); display: block; }
+        .btn-logout {
+            display: block; width: 100%;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-2); border-radius: 8px; padding: 9px;
+            font-size: 13px; cursor: pointer; text-align: center;
+            transition: all .15s;
+        }
+        .btn-logout:hover { border-color: #ff6b6b; color: #ff6b6b; }
+        .main-content { flex: 1; padding: 32px; overflow-y: auto; margin-left: 240px; }
+        .page-header { margin-bottom: 28px; }
+        .page-title { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+        .page-subtitle { color: var(--text-2); font-size: 14px; margin: 0; }
+        .alert { border-radius: 10px; padding: 12px 16px; font-size: 14px; margin-bottom: 20px; }
+        .alert-success { background: #0d2e26; border: 1px solid #00a88a; color: var(--accent); }
+        .alert-danger { background: #2d1a1a; border: 1px solid #7f2020; color: #ff6b6b; }
+        .alert-warning { background: #2a2200; border: 1px solid #6b5500; color: #f5c400; }
+        table { width: 100%; border-collapse: collapse; }
+        table th { text-align: left; padding: 12px 16px; font-size: 12px; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+        table td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        table tr:last-child td { border-bottom: none; }
+        table tr:hover td { background: var(--bg-3); }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+        .badge-success { background: rgba(0,229,195,0.12); color: var(--accent); border: 1px solid rgba(0,229,195,0.25); }
+        .badge-warning { background: rgba(245,196,0,0.12); color: #f5c400; border: 1px solid rgba(245,196,0,0.25); }
+        .badge-danger { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+        .badge-info { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+        .btn-sm { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; transition: all .15s; }
+        .btn-edit { background: var(--bg-4); color: var(--text); border: 1px solid var(--border); }
+        .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-delete { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+        .btn-delete:hover { background: rgba(248,113,113,0.2); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; color: var(--text-2); font-size: 13px; margin-bottom: 8px; font-weight: 500; }
+        .form-control { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; box-sizing: border-box; outline: none; transition: border-color .2s; }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,195,0.1); }
+        select.form-control option { background: var(--bg-3); color: var(--text); }
+        textarea.form-control { resize: vertical; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field-error { color: #f87171; font-size: 12px; margin-top: 4px; }
+        .table-container { overflow-x: auto; }
+        /* Filtros */
+        .filter-bar {
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+        }
+        .filter-bar .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-bar label { font-size: 11px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+        .filter-bar select, .filter-bar input {
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 12px; color: var(--text);
+            font-size: 13px; min-width: 140px; outline: none;
+        }
+        .filter-bar select:focus, .filter-bar input:focus { border-color: var(--accent); }
+        .btn-filter { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-filter-apply { background: var(--accent); color: #000; }
+        .btn-filter-clear { background: var(--bg-4); color: var(--text-2); border: 1px solid var(--border); text-decoration: none; display: inline-block; }
+        .filter-active-badge { font-size: 11px; background: rgba(0,229,195,0.12); color: var(--accent); border: 1px solid rgba(0,229,195,0.3); border-radius: 20px; padding: 2px 10px; margin-left: 8px; }
+    </style>
+</head>
+
+<div th:fragment="sidebar(activeMenu)"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            ⬡ StockWise
+            <span>Gestión de Inventario</span>
+        </div>
+
+        <!-- Badge de rol -->
+        <div sec:authorize="hasRole('ADMIN')"    class="role-badge role-admin">🔑 Administrador</div>
+        <div sec:authorize="hasRole('MANEJADOR')" class="role-badge role-manejador">📋 Manejador</div>
+        <div sec:authorize="hasRole('VISOR')"    class="role-badge role-visor">👁 Visor (solo lectura)</div>
+
+        <nav>
+            <div class="nav-section">Principal</div>
+            <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard'} ? ' active'">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+
+            <div class="nav-section">Inventario</div>
+            <a th:href="@{/productos}" class="nav-item" th:classappend="${activeMenu == 'productos'} ? ' active'">
+                <span class="nav-icon">📦</span> Productos
+            </a>
+            <a th:href="@{/categorias}" class="nav-item" th:classappend="${activeMenu == 'categorias'} ? ' active'"
+               sec:authorize="hasAnyRole('ADMIN','VISOR')">
+                <span class="nav-icon">🏷️</span> Categorías
+            </a>
+
+            <!-- Movimientos: ADMIN y MANEJADOR -->
+            <a th:href="@{/movimientos}" class="nav-item" th:classappend="${activeMenu == 'movimientos'} ? ' active'"
+               sec:authorize="hasAnyRole('ADMIN','MANEJADOR')">
+                <span class="nav-icon">🔄</span> Movimientos
+            </a>
+
+            <div class="nav-section" sec:authorize="hasAnyRole('ADMIN','VISOR')">Gestión</div>
+            <a th:href="@{/proveedores}" class="nav-item" th:classappend="${activeMenu == 'proveedores'} ? ' active'"
+               sec:authorize="hasAnyRole('ADMIN','VISOR')">
+                <span class="nav-icon">🚚</span> Proveedores
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-user">
+                Sesión activa como<br/>
+                <strong sec:authentication="name">usuario</strong>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-logout">🚪 Cerrar Sesión</button>
+            </form>
+        </div>
+    </aside>
+</div>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Nuevo Movimiento')}"></head>
+<body>
+<div class="layout">
+    <div th:replace="~{layout :: sidebar('movimientos')}"></div>
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Registrar Movimiento</h1>
+            <p class="page-subtitle">Registra una entrada o salida de inventario</p>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <div class="card" style="max-width:640px;">
+            <form th:action="@{/movimientos/registrar}" method="post">
+
+                <div class="form-group">
+                    <label>Producto *</label>
+                    <!-- name="productoId" — se recibe como @RequestParam Long en el controller -->
+                    <select name="productoId" class="form-control" required>
+                        <option value="">— Selecciona un producto —</option>
+                        <option th:each="p : ${productos}"
+                                th:value="${p.id}"
+                                th:text="${p.nombre + ' (Stock: ' + p.stockActual + ')'}">Producto</option>
+                    </select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Tipo de Movimiento *</label>
+                        <select id="selectTipo" name="tipo" class="form-control" required>
+                            <option value="">— Selecciona —</option>
+                            <option value="ENTRADA">↑ Entrada</option>
+                            <option value="SALIDA">↓ Salida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivo *</label>
+                        <select id="selectMotivo" name="motivo" class="form-control" required>
+                            <option value="">— Selecciona —</option>
+                            <option value="COMPRA"     data-tipo="ENTRADA">Compra</option>
+                            <option value="DEVOLUCION" data-tipo="ENTRADA">Devolución</option>
+                            <option value="AJUSTE"     data-tipo="ENTRADA SALIDA">Ajuste</option>
+                            <option value="VENTA"      data-tipo="SALIDA">Venta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <script>
+                    (function () {
+                        const selectTipo   = document.getElementById('selectTipo');
+                        const selectMotivo = document.getElementById('selectMotivo');
+                        const allOpciones  = Array.from(selectMotivo.querySelectorAll('option[data-tipo]'));
+
+                        function filtrarMotivos() {
+                            const tipo = selectTipo.value;
+                            selectMotivo.value = '';           // resetear selección
+                            allOpciones.forEach(function(opt) {
+                                const visible = !tipo || opt.dataset.tipo.includes(tipo);
+                                opt.hidden    = !visible;
+                                opt.disabled  = !visible;
+                            });
+                        }
+
+                        selectTipo.addEventListener('change', filtrarMotivos);
+                        filtrarMotivos(); // estado inicial
+                    })();
+                </script>
+
+                <div class="form-group">
+                    <label>Cantidad *</label>
+                    <input type="number" name="cantidad" min="1" class="form-control" placeholder="0" required/>
+                </div>
+
+                <div class="form-group">
+                    <label>Observación</label>
+                    <textarea name="observacion" class="form-control" rows="3"
+                              placeholder="Detalle adicional del movimiento (opcional)"></textarea>
+                </div>
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div style="display:flex;gap:12px;margin-top:8px;">
+                    <button type="submit" class="btn-primary">Registrar Movimiento</button>
+                    <a th:href="@{/movimientos}"
+                       style="display:inline-block;padding:10px 16px;border-radius:10px;border:1px solid var(--border);color:var(--text-2);text-decoration:none;font-size:14px;">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

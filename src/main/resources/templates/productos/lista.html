@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Productos')}"></head>
+<body>
+<div class="layout">
+    <div th:replace="~{layout :: sidebar('productos')}"></div>
+    <main class="main-content">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <h1 class="page-title">Productos</h1>
+                <p class="page-subtitle">Gestiona el inventario de productos</p>
+            </div>
+            <a sec:authorize="hasRole('ADMIN')"
+               th:href="@{/productos/nuevo}"
+               class="btn-primary"
+               style="text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;">
+                + Nuevo Producto
+            </a>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}"   class="alert alert-danger"  th:text="${error}"></div>
+
+        <!-- Aviso para rol VISOR y MANEJADOR -->
+        <div sec:authorize="hasAnyRole('VISOR','MANEJADOR')" class="alert alert-warning" style="margin-bottom:16px;">
+            👁 Estás en modo solo lectura para productos. No puedes crear, editar ni eliminar.
+        </div>
+
+        <div class="card table-container">
+            <div th:if="${#lists.isEmpty(productos)}" style="color:var(--text-2);font-size:14px;padding:30px 0;text-align:center;">
+                No hay productos registrados aún.
+            </div>
+            <table th:unless="${#lists.isEmpty(productos)}">
+                <thead><tr>
+                    <th>#</th><th>Código</th><th>Nombre</th><th>Categoría</th>
+                    <th>Proveedor</th><th>Precio</th><th>Stock</th><th>Estado</th>
+                    <th sec:authorize="hasRole('ADMIN')">Acciones</th>
+                </tr></thead>
+                <tbody>
+                    <tr th:each="p : ${productos}">
+                        <td th:text="${p.id}" style="color:var(--text-2);">1</td>
+                        <td style="font-size:12px;color:var(--text-2);font-family:'Space Mono',monospace;" th:text="${p.codigo ?: '—'}">—</td>
+                        <td style="font-weight:500;" th:text="${p.nombre}">—</td>
+                        <td><span class="badge badge-info" th:text="${p.categoria?.nombre ?: '—'}">—</span></td>
+                        <td style="font-size:13px;" th:text="${p.proveedor?.nombre ?: '—'}">—</td>
+                        <td style="font-weight:600;" th:text="'$' + ${#numbers.formatDecimal(p.precio, 1, 0, 'COMMA')}">$0</td>
+                        <td th:text="${p.stockActual}">0</td>
+                        <td>
+                            <span th:if="${p.stockActual > p.stockMinimo}" class="badge badge-success">OK</span>
+                            <span th:if="${p.stockActual <= p.stockMinimo and p.stockActual > 0}" class="badge badge-warning">Bajo</span>
+                            <span th:if="${p.stockActual == 0}" class="badge badge-danger">Agotado</span>
+                        </td>
+                        <td sec:authorize="hasRole('ADMIN')" style="display:flex;gap:6px;">
+                            <a th:href="@{/productos/editar/{id}(id=${p.id})}" class="btn-sm btn-edit">Editar</a>
+                            <a th:href="@{/productos/eliminar/{id}(id=${p.id})}" class="btn-sm btn-delete"
+                               onclick="return confirm('¿Eliminar este producto?')">Eliminar</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

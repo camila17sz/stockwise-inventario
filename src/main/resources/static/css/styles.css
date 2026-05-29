@@ -1,0 +1,56 @@
+/* ============================================
+   STOCKWISE — Sistema de Gestión de Inventario
+   Design System: Dark Industrial + Neon Accent
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --bg:     #080b10;
+  --bg-2:   #0d1117;
+  --bg-3:   #151c26;
+  --bg-4:   #1c2535;
+  --border: #242e42;
+  --accent: #00e5c3;
+  --accent-dim: rgba(0,229,195,0.12);
+  --text:   #e2e8f5;
+  --text-2: #8899b8;
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity .15s, transform .1s;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
